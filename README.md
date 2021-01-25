@@ -1,6 +1,8 @@
 # userProjectGo
 
-Greate new user (method POST)
+Postman service was used to send requests
+
+Create new user (method POST)
 URL: http://localhost:8080/api/newuser
 Body: raw / json
 
