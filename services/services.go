@@ -183,6 +183,9 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Error: %v", err)
 	}
 
+	//call deleteUser
+	deleteUser(int64(id))
+
 	// format in string
 	msg := fmt.Sprintf("Updated successfully")
 
