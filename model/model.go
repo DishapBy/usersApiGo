@@ -1,6 +1,6 @@
 package model
 
-// User schema of the user table
+// User schema
 type User struct {
 	ID        int64  `json:"id"`
 	Name      string `json:"name"`

@@ -2,14 +2,14 @@ package services
 
 import (
 	"database/sql"
-	"encoding/json" // package to encode and decode the json into struct and vice versa
+	"encoding/json"
 	"fmt"
 	"userApiGo/model" //import user model
 
 	"log"
-	"net/http" // used to access the request and response object of the api
-	"os"       // used to read the environment variable
-	"strconv"  // package used to covert string into int type
+	"net/http"
+	"os"
+	"strconv" // package used to covert string into int type
 
 	"github.com/gorilla/mux" // used to get the params from the route
 
@@ -53,8 +53,8 @@ func createConnection() *sql.DB {
 
 // Create new user
 func CreateNewUser(w http.ResponseWriter, r *http.Request) {
-	// set the header to content type x-www-form-urlencoded
-	// Allow all origin to handle cors issue
+	// set the header to content type
+
 	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
@@ -90,14 +90,14 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	// get the userid from the request params, key is "id"
 	params := mux.Vars(r)
 
-	// convert the id type from string to int
+	// convert id to int
 	id, err := strconv.Atoi(params["id"])
 
 	if err != nil {
 		log.Fatalf("Unable to convert the string into int.  %v", err)
 	}
 
-	// call the getUser function with user id to retrieve a single user
+	// get one user
 	user, err := getUser(int64(id))
 
 	if err != nil {
@@ -108,12 +108,12 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-// Get all user
+// Get all users
 func GetAllUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	// get all the users in the db
+	// get all users from db
 	allUsers, err := getAllUsers()
 
 	if err != nil {
@@ -131,7 +131,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Methods", "PUT")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	// get the id from the request params (id like a key)
+	// get the id from the request (id like a key)
 	params := mux.Vars(r)
 
 	// convert string to int
@@ -141,7 +141,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Unable to convert the string into int.  %v", err)
 	}
 
-	// create user. Use type model.User
+	// Create user. Use type model.User
 	var user model.User
 
 	err = json.NewDecoder(r.Body).Decode(&user)
@@ -150,10 +150,10 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Unable to decode the request body.  %v", err)
 	}
 
-	// call update user to update the user
+	// update user
 	updatedRows := updateUser(int64(id), user)
 
-	// format the message string
+	// format the messge string
 	msg := fmt.Sprintf("Updated successfully. Not have %v", updatedRows)
 
 	// format the response message
@@ -166,7 +166,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
-// DeleteUser delete user's detail in the postgres db
+// Delete user from db
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Context-Type", "application/x-www-form-urlencoded")
@@ -176,7 +176,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	params := mux.Vars(r)
 
-	// convert the id in string to int
+	// convert id to int
 	id, err := strconv.Atoi(params["id"])
 
 	if err != nil {
@@ -204,7 +204,6 @@ func insertUser(user model.User) int64 {
 	// Close connect
 	defer db.Close()
 
-	// the inserted id will store in this id
 	var id int64
 
 	err := db.QueryRow(`INSERT INTO users (name, lastname, age, birthdate) VALUES ($1, $2, $3, $4) RETURNING id`, user.Name, user.Lastname, user.Age, user.Birthdate).Scan(&id)
@@ -219,7 +218,7 @@ func insertUser(user model.User) int64 {
 	return id
 }
 
-// get one user from the DB by its userid
+// get one user from db
 func getUser(id int64) (model.User, error) {
 	// Open connect
 	db := createConnection()
@@ -230,10 +229,9 @@ func getUser(id int64) (model.User, error) {
 	// create user
 	var user model.User
 
-	// execute the sql statement
+	// execute sql
 	row := db.QueryRow(`SELECT * FROM users WHERE id=$1`, id)
 
-	// unmarshal the row object to user
 	err := row.Scan(&user.ID, &user.Name, &user.Lastname, &user.Age, &user.Birthdate)
 
 	switch err {
@@ -260,31 +258,30 @@ func getAllUsers() ([]model.User, error) {
 
 	var users []model.User
 
-	// create the select sql query
+	// Create the select sql query
 	sqlStatement := `SELECT * FROM users`
 
-	// execute the sql statement
+	// Execute the sql statement
 	rows, err := db.Query(sqlStatement)
 
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 
-	// close the statement
+	// Close the statement
 	defer rows.Close()
 
-	// iterate over the rows
+	// Iterate rows
 	for rows.Next() {
 		var user model.User
 
-		// unmarshal the row object to user
 		err = rows.Scan(&user.ID, &user.Name, &user.Lastname, &user.Age, &user.Birthdate)
 
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 
-		// append the user in the users slice
+		// append one user in our users
 		users = append(users, user)
 
 	}
@@ -293,7 +290,7 @@ func getAllUsers() ([]model.User, error) {
 	return users, err
 }
 
-// update user in the DB
+// update user in db
 func updateUser(id int64, user model.User) int64 {
 
 	// Open connect
@@ -307,7 +304,7 @@ func updateUser(id int64, user model.User) int64 {
 	fmt.Println(user.Age)
 	fmt.Println(user.Birthdate)
 
-	// execute the sql statement
+	// execute sql
 	res, err := db.Exec(`UPDATE users SET name=$2, lastname=$3, age=$4, birthdate =$5 WHERE id=$1`, id, user.Name, user.Lastname, user.Age, user.Birthdate)
 
 	if err != nil {
